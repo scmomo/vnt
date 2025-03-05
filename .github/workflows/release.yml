@@ -18,10 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # a list of all the targets
-        # 选择使用openssl或者ring，并不是所有平台都支持
         include:
-          - TARGET: armv5te-unknown-linux-musleabi # new target for armv5te
+          - TARGET: armv5te-unknown-linux-musleabi # target for armv5te
             OS: ubuntu-latest
             FEATURES: ring-cipher,wss
     runs-on: ${{ matrix.OS }}
@@ -35,7 +33,7 @@ jobs:
       - name: Init submodules
         uses: snickerbockers/submodules-init@v4
       - name: Cargo cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
@@ -55,20 +53,14 @@ jobs:
           if [[ $OS =~ ^ubuntu.*$ ]]; then
             sudo apt-get update && sudo apt-get install clang llvm libc6-dev-i386 crossbuild-essential-arm64 crossbuild-essential-armhf musl-tools libboost-all-dev libc6-dev -y
             #  curl -s musl.cc | grep mipsel
-            case $TARGET in      
+            case $TARGET in 
               armv5te-unknown-linux-musleabi)
                 MUSL_URI=arm5te-linux-musleabi-cross
                 ;;        
             esac
           
-            if [[ $TARGET =~ ^mips.*$ ]]; then
-              # mips平台使用1.71.1版本
-              rustup install 1.71.1
-              rustup default 1.71.1  
-            else
-              rustup install 1.77
-              rustup default 1.77
-            fi
+            rustup install 1.77
+            rustup default 1.77
           
             if [  -n "$MUSL_URI" ]; then
               mkdir -p ./musl_gcc 
@@ -84,42 +76,9 @@ jobs:
           
           # some additional configuration for cross-compilation on linux
           cat >>~/.cargo/config <<EOF
-          [target.x86_64-unknown-linux-musl]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.aarch64-unknown-linux-musl]
-          linker = "aarch64-linux-musl-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.armv7-unknown-linux-musleabihf]
-          linker = "armv7l-linux-musleabihf-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.armv7-unknown-linux-musleabi]
-          linker = "armv7m-linux-musleabi-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.arm-unknown-linux-musleabihf]
-          linker = "arm-linux-musleabihf-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]   
-          [target.arm-unknown-linux-musleabi]
-          linker = "arm-linux-musleabi-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
           [target.armv5te-unknown-linux-musleabi]
           linker = "arm5te-linux-musleabi-gcc"
           rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.mipsel-unknown-linux-musl]
-          linker = "mipsel-linux-musl-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.mips-unknown-linux-musl]
-          linker = "mips-linux-musl-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.x86_64-pc-windows-msvc]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]    
-          [target.i686-pc-windows-msvc]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]      
-          [target.x86_64-apple-darwin]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"] 
-          [target.aarch64-apple-darwin]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]     
-          [target.i686-unknown-linux-musl]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]    
           EOF
       - name: Install rust target
         run: rustup target add $TARGET
@@ -132,14 +91,8 @@ jobs:
       - name: Compress
         run: |
           mkdir -p ./artifacts
-          # windows is the only OS using a different convention for executable file name
-          if [[ $OS =~ ^windows.*$ ]]; then
-              EXEC_VNT_CLI=vnt-cli.exe
-              EXEC_VN_LINK_CLI=vn-link-cli.exe
-          else
-              EXEC_VNT_CLI=vnt-cli
-              EXEC_VN_LINK_CLI=vn-link-cli
-          fi
+          EXEC_VNT_CLI=vnt-cli
+          EXEC_VN_LINK_CLI=vn-link-cli
           if [[ $GITHUB_REF_TYPE =~ ^tag$ ]]; then
             TAG=$GITHUB_REF_NAME
           else
