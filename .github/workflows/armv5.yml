@@ -86,21 +86,25 @@ jobs:
           sed -i 's|en.to_string|zh.to_string|g' ./common/src/cli.rs
           sed -i 's|en-US|zh|g' ./common/src/cli.rs
           #vn-link-cli_lite
-          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --no-default-features
+          #cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --no-default-features
           #cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
-          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
-          cargo clean
+          #cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
+          #cargo clean
           #vn-link-cli_openssl
-          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features openssl-vendored,aes_ecb,server_encrypt,aes_gcm,ip_proxy,port_mapping
-          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_openssl
-          cargo clean
+          #cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features openssl-vendored,aes_ecb,server_encrypt,aes_gcm,ip_proxy,port_mapping
+          #cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_openssl
+          #cargo clean
           #vn-link-cli_default
-          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features default
-          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_default
-          cargo clean
+          #cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features default
+          #cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_default
+          #cargo clean
           #vn-link-cli_full
-          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features openssl-vendored,ring-cipher,wss
-          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_full
+          #cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features openssl-vendored,ring-cipher,wss
+          #cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_full
+
+          #vn-link-cli
+          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --no-default-features
+          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
           cargo clean
 
       - name: 安装 UPX
@@ -147,9 +151,3 @@ jobs:
           tag_name: ${{ needs.check.outputs.ver }}
           files: |
               /opt/armv5te/*
-      - name: 删除工作流
-        uses: GitRML/delete-workflow-runs@main
-        with:
-          token: ${{ github.token }}
-          retain_days: 2
-          keep_minimum_runs: 1
