@@ -1,230 +1,142 @@
-name: Rust
+name: with cross for vn-link-cli armv5tejl
+# 参考 https://github.com/lmq8267/vnt/blob/main/.github/workflows/%E5%A4%9A%E7%89%88%E6%9C%AC.yml
 
 on:
   push:
     tags:
       - '*'
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
-
-defaults:
-  run:
-    # necessary for windows
-    shell: bash
+  TZ: Asia/Shanghai
 
 jobs:
-  #  test:
-  #    runs-on: ubuntu-latest
-  #    steps:
-  #      - uses: actions/checkout@v2
-  #      - name: Init submodules
-  #        uses: snickerbockers/submodules-init@v4
-  #      - name: Cargo cache
-  #        uses: actions/cache@v2
-  #        with:
-  #          path: |
-  #            ~/.cargo/registry
-  #            ./target
-  #          key: test-cargo-registry
-  #      - name: List
-  #        run: find ./
-  #      - name: Run tests
-  #        run: cargo test --verbose
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      ver: ${{ steps.getversion.outputs.ver }}
+      cver: ${{ steps.getversion.outputs.cver }}
+    steps:
+    - name: 检查更新
+      id: getversion
+      run: |
+        ver=`curl https://api.github.com/repos/vnt-dev/vnt/releases/latest | jq -r '.tag_name'`
+        cver=`curl https://api.github.com/repos/lmq8267/vnt/releases/latest | jq -r '.tag_name'`
+        echo "ver=${ver}" >> $GITHUB_OUTPUT
+        echo "cver=${cver}" >> $GITHUB_OUTPUT
 
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        # a list of all the targets
-        # 选择使用openssl或者ring，并不是所有平台都支持
-        include:
-          - TARGET: armv5te-unknown-linux-gnueabi # anyka ak3918 board
-            OS: ubuntu-latest
-            FEATURES: ring-cipher,wss
-    # needs: test
-    runs-on: ${{ matrix.OS }}
-    env:
-      NAME: vn-link-cli # change with the name of your project
-      TARGET: ${{ matrix.TARGET }}
-      OS: ${{ matrix.OS }}
-      FEATURES: ${{ matrix.FEATURES }}
+    # for armv5te-unknown-linux-gnueabi # anyka ak3918 board
+    runs-on: ubuntu-latest
+    needs: check
+    if: ${{ needs.check.outputs.ver != needs.check.outputs.cver }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Init submodules
-        uses: snickerbockers/submodules-init@v4
-      - name: Cargo cache
-        uses: actions/cache@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
         with:
-          path: |
-            ~/.cargo/registry
-            ./target
-          key: build-cargo-registry-${{matrix.TARGET}}
-      - name: Use strawberry perl
-        if: startsWith(matrix.os, 'windows')
-        run: echo OPENSSL_SRC_PERL=C:/Strawberry/perl/bin/perl >> $GITHUB_ENV
-      - name: List
-        run: find ./
-      - name: Install and configure dependencies
+          toolchain: stable
+          override: true
+  
+      - name: Install cross
+        run: cargo install cross
+  
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm
+      - name: Set Ak37E CrossCompile
         run: |
-          # dependencies are only needed on ubuntu as that's the only place where
-          # we make cross-compilation
-          rustup set auto-self-update disable
-          
-          if [[ $OS =~ ^ubuntu.*$ ]]; then
-            sudo apt-get update && sudo apt-get install clang llvm libc6-dev-i386 crossbuild-essential-arm64 crossbuild-essential-armhf musl-tools libboost-all-dev libc6-dev -y
-            #  curl -s musl.cc | grep mipsel
-            case $TARGET in 
-              mipsel-unknown-linux-musl)
-                MUSL_URI=mipsel-linux-musl-cross
-                ;;
-              aarch64-unknown-linux-musl)
-                MUSL_URI=aarch64-linux-musl-cross
-                ;;
-              armv7-unknown-linux-musleabihf)
-                MUSL_URI=armv7l-linux-musleabihf-cross
-                ;;    
-              armv7-unknown-linux-musleabi)
-                MUSL_URI=armv7m-linux-musleabi-cross
-                ;;   
-              arm-unknown-linux-musleabihf)
-                MUSL_URI=arm-linux-musleabihf-cross
-                ;;    
-              arm-unknown-linux-musleabi)
-                MUSL_URI=arm-linux-musleabi-cross
-                ;;        
-              mips-unknown-linux-musl)
-                MUSL_URI=mips-linux-musl-cross
-                ;;
-              armv5te-unknown-linux-gnueabi)
-                MUSL_URI=arm-linux-gnueabi-cross
-                ;;
-            esac
-          
-            if [[ $TARGET =~ ^mips.*$ ]]; then
-              # mips平台使用1.71.1版本
-              rustup install 1.71.1
-              rustup default 1.71.1  
-            else
-              rustup install 1.77
-              rustup default 1.77
-            fi
-          
-            if [  -n "$MUSL_URI" ]; then
-              if [[ $MUSL_URI =~ ^armv5te.*$ ]]; then
-                wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
-                tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
-                export PATH=$PATH:$PWD/arm-anykav500-linux-uclibcgnueabi_V1.0.05/bin
-                source ~/.bashrc
-                # test arm-anykav500-linux-uclibcgnueabi-gcc
-                arm-anykav500-linux-uclibcgnueabi-gcc -v
-              else
-                mkdir -p ./musl_gcc 
-                wget -c https://musl.cc/$MUSL_URI.tgz -P ./musl_gcc/
-                tar zxf ./musl_gcc/$MUSL_URI.tgz -C ./musl_gcc/
-                sudo ln -s $(pwd)/musl_gcc/$MUSL_URI/bin/*gcc /usr/bin/
-              fi
-            fi
-          else
-            rustup install 1.77
-            rustup default 1.77 
-          fi
-          rustup -V
-          
-          # some additional configuration for cross-compilation on linux
+          mkdir -p /opt/cross-armv5tejl
+          wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
+          tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2 -C /opt/cross-armv5tejl
+          export PATH=$PATH:/opt/armv5te/arm-anykav500-linux-uclibcgnueabi_V1.0.05/bin
+          # test arm-anykav500-linux-uclibcgnueabi-gcc
+          arm-anykav500-linux-uclibcgnueabi-gcc -v
+          sudo timedatectl set-timezone "Asia/Shanghai"
+
+      - name: Cross compile
+        env:
+          CROSS_CONTAINER_ENGINE: docker
+        run: |
+          #rustup target add mipsel-unknown-linux-musl
           cat >>~/.cargo/config <<EOF
-          [target.x86_64-unknown-linux-musl]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.aarch64-unknown-linux-musl]
-          linker = "aarch64-linux-musl-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.armv7-unknown-linux-musleabihf]
-          linker = "armv7l-linux-musleabihf-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.armv7-unknown-linux-musleabi]
-          linker = "armv7m-linux-musleabi-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          # armv5tejl
           [target.armv5te-unknown-linux-gnueabi]
           linker = "arm-anykav500-linux-uclibcgnueabi-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.arm-unknown-linux-musleabihf]
-          linker = "arm-linux-musleabihf-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]   
-          [target.arm-unknown-linux-musleabi]
-          linker = "arm-linux-musleabi-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.mipsel-unknown-linux-musl]
-          linker = "mipsel-linux-musl-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.mips-unknown-linux-musl]
-          linker = "mips-linux-musl-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.x86_64-pc-windows-msvc]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]    
-          [target.i686-pc-windows-msvc]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]      
-          [target.x86_64-apple-darwin]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"] 
-          [target.aarch64-apple-darwin]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]     
-          [target.i686-unknown-linux-musl]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]    
+          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols","-C", "link-arg=-static",] 
+          #编译静态选项 默认编译动态版
           EOF
-      - name: Install rust target
-        run: rustup target add $TARGET
-      - name: Run build vn-link-cli
-        run: cargo build --package vn-link-cli --release --verbose --target $TARGET --features $FEATURES
-      - name: Run build vnt-cli
-        run: cargo build --package vnt-cli --release --verbose --target $TARGET --features $FEATURES
-      - name: List target
-        run: find ./target
-      - name: Compress
+          git clone https://github.com/vnt-dev/vnt -b ${{ needs.check.outputs.ver }} /opt/vnt
+          cd /opt/vnt
+          #修改为中文
+          sed -i 's|en.to_string|zh.to_string|g' ./common/src/cli.rs
+          sed -i 's|en-US|zh|g' ./common/src/cli.rs
+          #vn-link-cli_lite
+          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features openssl-vendored,ring-cipher,wss
+          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
+          cargo clean
+          #vn-link-cli_openssl
+          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features openssl-vendored,aes_ecb,server_encrypt,aes_gcm,ip_proxy,port_mapping
+          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_openssl
+          cargo clean
+          #vn-link-cli_default
+          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features default
+          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_default
+          cargo clean
+          #vn-link-cli_full
+          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features openssl-vendored,ring-cipher,wss
+          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_full
+          cargo clean
+
+      - name: 安装 UPX
+        uses: crazy-max/ghaction-upx@v3
+        with:
+          version: latest
+          install-only: true
+      - name: 压缩
         run: |
-          mkdir -p ./artifacts
-          # windows is the only OS using a different convention for executable file name
-          if [[ $OS =~ ^windows.*$ ]]; then
-              EXEC_VNT_CLI=vnt-cli.exe
-              EXEC_VN_LINK_CLI=vn-link-cli.exe
-          else
-              EXEC_VNT_CLI=vnt-cli
-              EXEC_VN_LINK_CLI=vn-link-cli
-          fi
-          if [[ $GITHUB_REF_TYPE =~ ^tag$ ]]; then
-            TAG=$GITHUB_REF_NAME
-          else
-            TAG=$GITHUB_SHA
-          fi
-          mv ./target/$TARGET/release/$EXEC_VNT_CLI ./artifacts/$EXEC_VNT_CLI
-          mv ./target/$TARGET/release/$EXEC_VN_LINK_CLI ./artifacts/$EXEC_VN_LINK_CLI
-          mv ./README ./artifacts/README.txt
-          cd ./artifacts
-          tar -czf vnt-$TARGET-$TAG.tar.gz *
-          mkdir upload_file
-          mv vnt-$TARGET-$TAG.tar.gz ./upload_file/
-      - name: Archive artifact
-        uses: actions/upload-artifact@v4
+          cd /opt/armv5te
+          du -ha
+          upx --lzma --best /opt/armv5te/vn-link-cli_lite
+          upx --lzma --best /opt/armv5te/vn-link-cli_openssl
+          upx --lzma --best /opt/armv5te/vn-link-cli_default
+          upx --lzma --best /opt/armv5te/vn-link-cli_full
+          du -ha
+          #echo $(md5sum /opt/mipsel/vnt-cli_${NAME} | awk '{print $1;}') >${NAME}_MD5.txt
+          echo "build_time=$(date '+%Y年%m月%d日%H:%M:%S' | jq -sRr @uri)" >> $GITHUB_ENV
+      - name : 上传
+        uses: actions/upload-artifact@master
+        if: always()
         with:
-          name: vnt-cli-${{ matrix.TARGET }}
-          path: |
-            ./artifacts/upload_file
-  # deploys to github releases on tag
-  deploy:
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+         name: vn-link-cli_armv5te
+         path: /opt/armv5te/vn-link-cli_*
+      - name: 发布
+        uses: softprops/action-gh-release@v2
         with:
-          path: ./artifacts
-      - name: List
-        run: find ./artifacts
-      - name: Release
-        uses: svenstaro/upload-release-action@v2
+          token: ${{ github.token }}
+          body: |
+           > ### ![](https://img.shields.io/badge/%E7%BC%96%E8%AF%91%E6%97%B6%E9%97%B4-${{ env.build_time }}-8267?logo=github&labelColor=%E9%A1%BB)![](https://img.shields.io/github/downloads/${{ github.repository }}/${{ needs.check.outputs.ver }}/total?label=%E4%B8%8B%E8%BD%BD%E6%AC%A1%E6%95%B0&logo=github)![](https://img.shields.io/docker/image-size/lmq8267/vnt/${{ needs.check.outputs.ver }}?label=%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F&link=https%3A%2F%2Fhub.docker.com%2Fr%2Flmq8267%2Fvnt&logo=docker) 
+
+           ### **各版本区别：**
+           
+           - **lite**    ：不集成任何加密,去掉了所有模块
+           - **default** ：默认配置，没有集成openssl和wss协议 
+           - **full**    ：集成所有模块所有加密方式
+
+           - **armv5te**  ：armv5tejl架构，包含所有模块
+           
+           如果不加密（参数-w），集不集成加密模块都不影响使用，若加密则所有客户端都应使用相同的加密方式
+           [详细加密方式介绍](https://github.com/vnt-dev/vnt#%E7%BC%96%E8%AF%91)、[官方更新说明](https://github.com/vnt-dev/vnt/releases)
+
+           [其他平台压缩版](https://github.com/lmq8267/vnt-cli/releases)
+          tag_name: ${{ needs.check.outputs.ver }}
+          files: |
+              /opt/armv5te/*
+      - name: 删除工作流
+        uses: GitRML/delete-workflow-runs@main
         with:
-          repo_token: ${{ secrets.YOURTOKEN }}
-          file: ./artifacts/**/*.tar.gz
-          tag: ${{ github.ref }}
-          overwrite: true
-          file_glob: true
+          token: ${{ github.token }}
+          retain_days: 2
+          keep_minimum_runs: 1
