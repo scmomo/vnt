@@ -1,4 +1,4 @@
-name: with cross for vn-link-cli armv5tejl
+name: with cross for vn-link-cli armv5te
 # 参考 https://github.com/lmq8267/vnt/blob/main/.github/workflows/%E5%A4%9A%E7%89%88%E6%9C%AC.yml
 
 on:
@@ -51,9 +51,9 @@ jobs:
           platforms: arm
       - name: Set Ak37E CrossCompile
         run: |
-          mkdir -p /opt/cross-armv5tejl
+          mkdir -p /opt/cross-armv5te
           wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
-          tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2 -C /opt/cross-armv5tejl
+          tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2 -C /opt/cross-armv5te
           export PATH=$PATH:/opt/armv5te/arm-anykav500-linux-uclibcgnueabi_V1.0.05/bin
           source ~/.bashrc
           # test arm-anykav500-linux-uclibcgnueabi-gcc
@@ -128,7 +128,7 @@ jobs:
            - **default** ：默认配置，没有集成openssl和wss协议 
            - **full**    ：集成所有模块所有加密方式
 
-           - **armv5te**  ：armv5tejl架构，包含所有模块
+           - **armv5te**  ：armv5te架构，包含所有模块
            
            如果不加密（参数-w），集不集成加密模块都不影响使用，若加密则所有客户端都应使用相同的加密方式
            [详细加密方式介绍](https://github.com/vnt-dev/vnt#%E7%BC%96%E8%AF%91)、[官方更新说明](https://github.com/vnt-dev/vnt/releases)
