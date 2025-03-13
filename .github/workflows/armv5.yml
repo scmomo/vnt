@@ -71,6 +71,7 @@ jobs:
         env:
           CROSS_CONTAINER_ENGINE: docker
         run: |
+          mkdir -p /opt/armv5te/
           # rustup update
           # rustup target add armv5te-unknown-linux-gnueabi
           cat >>~/.cargo/config <<EOF
@@ -86,6 +87,7 @@ jobs:
           sed -i 's|en-US|zh|g' ./common/src/cli.rs
           #vn-link-cli_lite
           cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --no-default-features
+          #cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
           cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
           cargo clean
           #vn-link-cli_openssl
