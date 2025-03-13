@@ -30,7 +30,6 @@ jobs:
     # for armv5te-unknown-linux-gnueabi # anyka ak3918 board
     runs-on: ubuntu-latest
     needs: check
-    if: ${{ needs.check.outputs.ver != needs.check.outputs.cver }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
