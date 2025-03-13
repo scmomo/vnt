@@ -29,6 +29,9 @@ jobs:
   build:
     # for armv5te-unknown-linux-gnueabi # anyka ak3918 board
     runs-on: ubuntu-latest
+    env:
+      arm-anykav500-linux-uclibcgnueabi-gcc: /opt/armv5te/arm-anykav500-linux-uclibcgnueabi_V1.0.05/bin/arm-anykav500-linux-uclibcgnueabi-gcc
+      
     needs: check
     steps:
       - name: Checkout code
@@ -52,6 +55,7 @@ jobs:
           wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
           tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2 -C /opt/cross-armv5tejl
           export PATH=$PATH:/opt/armv5te/arm-anykav500-linux-uclibcgnueabi_V1.0.05/bin
+          source ~/.bashrc
           # test arm-anykav500-linux-uclibcgnueabi-gcc
           arm-anykav500-linux-uclibcgnueabi-gcc -v
           sudo timedatectl set-timezone "Asia/Shanghai"
