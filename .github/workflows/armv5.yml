@@ -111,10 +111,19 @@ jobs:
             fi
           
             if [  -n "$MUSL_URI" ]; then
-              mkdir -p ./musl_gcc 
-              wget -c https://musl.cc/$MUSL_URI.tgz -P ./musl_gcc/
-              tar zxf ./musl_gcc/$MUSL_URI.tgz -C ./musl_gcc/
-              sudo ln -s $(pwd)/musl_gcc/$MUSL_URI/bin/*gcc /usr/bin/
+              if [[ $MUSL_URI =~ ^armv5te.*$ ]]; then
+                wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
+                tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
+                export PATH=$PATH:$PWD/arm-anykav500-linux-uclibcgnueabi_V1.0.05/bin
+                source ~/.bashrc
+                # test arm-anykav500-linux-uclibcgnueabi-gcc
+                arm-anykav500-linux-uclibcgnueabi-gcc -v
+              else
+                mkdir -p ./musl_gcc 
+                wget -c https://musl.cc/$MUSL_URI.tgz -P ./musl_gcc/
+                tar zxf ./musl_gcc/$MUSL_URI.tgz -C ./musl_gcc/
+                sudo ln -s $(pwd)/musl_gcc/$MUSL_URI/bin/*gcc /usr/bin/
+              fi
             fi
           else
             rustup install 1.77
