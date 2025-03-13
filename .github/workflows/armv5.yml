@@ -43,12 +43,13 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install clang llvm libc6-dev-i386 crossbuild-essential-arm64 crossbuild-essential-armhf musl-tools libboost-all-dev libc6-dev gcc-multilib libstdc++6 make cmake zlib1g-dev lib32z1-dev liblzo2-dev liblzo2-2 liblzo2-dev:i386 u-boot-tools lib32ncurses6 libncurses5-dev libmpfr-dev libmpfr6 libmpfr6:i386 mtd-utils libtool cpp g++ gawk gcc perl -y
+          sudo apt-get install clang llvm libc6-dev-i386 musl-tools libboost-all-dev libc6-dev gcc-multilib libstdc++6 make cmake zlib1g-dev lib32z1-dev liblzo2-dev liblzo2-2 liblzo2-dev:i386 u-boot-tools lib32ncurses6 libncurses5-dev libmpfr-dev libmpfr6 libmpfr6:i386 mtd-utils libtool cpp g++ gawk gcc perl -y
           mkdir -p /opt/ak37e_cross
           wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
           tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2 -C /opt/ak37e_cross
           export PATH=$PATH:/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin
           source ~/.bashrc
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libmpfr.so.6 /usr/lib/x86_64-linux-gnu/libmpfr.so.4
           # arm-anykav500-linux-uclibcgnueabi-gcc -v
           sudo timedatectl set-timezone "Asia/Shanghai"
       - name: Install cross
