@@ -41,25 +41,35 @@ jobs:
           override: true
       - name: Set Ak37E CrossCompile
         run: |
+          sudo apt-get update && sudo apt-get install clang llvm libc6-dev-i386 crossbuild-essential-arm64 crossbuild-essential-armhf musl-tools libboost-all-dev libc6-dev gcc-multilib libstdc++6 make cmake zlib1g-dev lib32z1-dev liblzo2-dev liblzo2-2 liblzo2-dev:i386 u-boot-tools lib32ncurses6 libncurses5-dev libmpfr-dev libmpfr6 libmpfr6:i386 mtd-utils libtool cpp g++ gawk gcc perl -y
           mkdir -p /opt/ak37e_cross
           wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
           tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2 -C /opt/ak37e_cross
           export PATH=$PATH:/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin
           source ~/.bashrc
-          arm-anykav500-linux-uclibcgnueabi-gcc -v
+          # arm-anykav500-linux-uclibcgnueabi-gcc -v
           sudo timedatectl set-timezone "Asia/Shanghai"
       - name: Install cross
-        run: cargo install cross
-  
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        run: cargo install cross --git https://github.com/cross-rs/cross
+      - uses: actions/checkout@v4
+      - name: Init submodules
+        uses: snickerbockers/submodules-init@v4
+      - name: Cargo cache
+        uses: actions/cache@v2
         with:
-          platforms: arm
+          path: |
+            ~/.cargo/registry
+            ./target
+          key: build-cargo-registry-armv5te-unknown-linux-gnueabi
+      - name: Start Docker
+        run: |
+          sudo service docker start
       - name: Cross compile
         env:
           CROSS_CONTAINER_ENGINE: docker
         run: |
-          #rustup target add mipsel-unknown-linux-musl
+          # rustup update
+          # rustup target add armv5te-unknown-linux-gnueabi
           cat >>~/.cargo/config <<EOF
           [target.armv5te-unknown-linux-gnueabi]
           linker = "arm-anykav500-linux-uclibcgnueabi-gcc"
@@ -102,7 +112,7 @@ jobs:
           upx --lzma --best /opt/armv5te/vn-link-cli_default
           upx --lzma --best /opt/armv5te/vn-link-cli_full
           du -ha
-          #echo $(md5sum /opt/mipsel/vnt-cli_${NAME} | awk '{print $1;}') >${NAME}_MD5.txt
+          # echo $(md5sum /opt/armv5te/vn-link-cli_${NAME} | awk '{print $1;}') >${NAME}_MD5.txt
           echo "build_time=$(date '+%Y年%m月%d日%H:%M:%S' | jq -sRr @uri)" >> $GITHUB_ENV
       - name : 上传
         uses: actions/upload-artifact@master
