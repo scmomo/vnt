@@ -106,7 +106,23 @@ jobs:
           cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --no-default-features
           cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
           cargo clean
-          
+
+      - name: 安装 UPX
+        uses: crazy-max/ghaction-upx@v3
+        with:
+          version: latest
+          install-only: true
+      - name: 压缩
+        run: |
+          cd /opt/armv5te
+          du -ha
+          upx --lzma --best /opt/armv5te/vn-link-cli_lite
+          #upx --lzma --best /opt/armv5te/vn-link-cli_openssl
+          #upx --lzma --best /opt/armv5te/vn-link-cli_default
+          #upx --lzma --best /opt/armv5te/vn-link-cli_full
+          du -ha
+          # echo $(md5sum /opt/armv5te/vn-link-cli_${NAME} | awk '{print $1;}') >${NAME}_MD5.txt
+          echo "build_time=$(date '+%Y年%m月%d日%H:%M:%S' | jq -sRr @uri)" >> $GITHUB_ENV
       - name : 上传
         uses: actions/upload-artifact@master
         if: always()
