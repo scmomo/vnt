@@ -44,9 +44,8 @@ jobs:
           mkdir -p /opt/ak37e_cross
           wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
           tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2 -C /opt/ak37e_cross
-          export PATH=$PATH:/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi_V1.0.05/bin
+          export PATH=$PATH:/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin
           source ~/.bashrc
-          # test arm-anykav500-linux-uclibcgnueabi-gcc
           arm-anykav500-linux-uclibcgnueabi-gcc -v
           sudo timedatectl set-timezone "Asia/Shanghai"
       - name: Install cross
@@ -73,7 +72,7 @@ jobs:
           sed -i 's|en.to_string|zh.to_string|g' ./common/src/cli.rs
           sed -i 's|en-US|zh|g' ./common/src/cli.rs
           #vn-link-cli_lite
-          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features openssl-vendored,ring-cipher,wss
+          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --no-default-features
           cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
           cargo clean
           #vn-link-cli_openssl
