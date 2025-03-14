@@ -77,7 +77,7 @@ jobs:
           cat >>~/.cargo/config <<EOF
           [target.armv5te-unknown-linux-gnueabi]
           linker = "arm-anykav500-linux-uclibcgnueabi-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols","-C", "link-arg=-static", "-C", "target-feature=+thumb-mode"] 
+          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"] 
           #编译静态选项 默认编译动态版
           EOF
           git clone https://github.com/vnt-dev/vnt -b ${{ needs.check.outputs.ver }} /opt/vnt
