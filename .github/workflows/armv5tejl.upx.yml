@@ -63,7 +63,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ./target
-          key: build-cargo-registry-armv5te-unknown-linux-gnueabi
+          key: build-cargo-registry-armv5te-unknown-linux-musleabi
       - name: Start Docker
         run: |
           sudo service docker start
@@ -72,12 +72,12 @@ jobs:
           CROSS_CONTAINER_ENGINE: docker
         run: |
           mkdir -p /opt/armv5te/
-          rustup target add armv5te-unknown-linux-gnueabi
+          rustup target add armv5te-unknown-linux-musleabi
           cat >>~/.cargo/config <<EOF
-          [target.armv5te-unknown-linux-gnueabi]
+          [target.armv5te-unknown-linux-musleabi]
           linker = "arm-anykav500-linux-uclibcgnueabi-gcc"
           #rustflags = ["-C", "link-arg=-Wl,-dynamic-linker,/lib/ld-uClibc.so.0"]
-          rustflags = ["-C", "link-arg=-static", "-C", "link-arg=-Wl,--dynamic-linker=/lib/ld-uClibc.so.0"]
+          rustflags = ["-C", "link-arg=-Wl,--dynamic-linker=/lib/ld-uClibc.so.0"]
           EOF
           git clone https://github.com/vnt-dev/vnt -b ${{ needs.check.outputs.ver }} /opt/vnt
           cd /opt/vnt
@@ -85,20 +85,20 @@ jobs:
           sed -i 's|en.to_string|zh.to_string|g' ./common/src/cli.rs
           sed -i 's|en-US|zh|g' ./common/src/cli.rs
           #vnt-cli_lite
-          cross build --package vnt-cli --target armv5te-unknown-linux-gnueabi --release --no-default-features
-          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vnt-cli /opt/armv5te/vnt-cli_lite
+          cross build --package vnt-cli --target armv5te-unknown-linux-musleabi --release --no-default-features
+          cp -rf /opt/vnt/target/armv5te-unknown-linux-musleabi/release/vnt-cli /opt/armv5te/vnt-cli_lite
           cargo clean
           #vnt-cli_default
-          cross build --package vnt-cli --target armv5te-unknown-linux-gnueabi --release --features default
-          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vnt-cli /opt/armv5te/vnt-cli_default
+          cross build --package vnt-cli --target armv5te-unknown-linux-musleabi --release --features default
+          cp -rf /opt/vnt/target/armv5te-unknown-linux-musleabi/release/vnt-cli /opt/armv5te/vnt-cli_default
           cargo clean
           #vn-link-cli_lite
-          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --no-default-features
-          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
+          cross build --package vn-link-cli --target armv5te-unknown-linux-musleabi --release --no-default-features
+          cp -rf /opt/vnt/target/armv5te-unknown-linux-musleabi/release/vn-link-cli /opt/armv5te/vn-link-cli_lite
           cargo clean
           #vn-link-cli_default
-          cross build --package vn-link-cli --target armv5te-unknown-linux-gnueabi --release --features default
-          cp -rf /opt/vnt/target/armv5te-unknown-linux-gnueabi/release/vn-link-cli /opt/armv5te/vn-link-cli_default
+          cross build --package vn-link-cli --target armv5te-unknown-linux-musleabi --release --features default
+          cp -rf /opt/vnt/target/armv5te-unknown-linux-musleabi/release/vn-link-cli /opt/armv5te/vn-link-cli_default
           cargo clean
 
       - name: 安装 UPX
