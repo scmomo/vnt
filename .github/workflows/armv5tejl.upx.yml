@@ -63,7 +63,7 @@ jobs:
           cat >>~/.cargo/config <<EOF
           [target.armv5te-unknown-linux-gnueabi]
           linker = "arm-linux-gnueabi-gcc"
-          rustflags = ["-C" , "target-feature=-crt-static", "-C", "link-arg=-Wl,--hash-style=sysv"]
+          rustflags = ["-C" , "target-feature=-crt-static"]
           EOF
           git clone https://github.com/vnt-dev/vnt -b ${{ needs.check.outputs.ver }} /opt/vnt
           cd /opt/vnt
