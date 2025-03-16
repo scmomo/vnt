@@ -77,7 +77,7 @@ jobs:
           cat >>~/.cargo/config <<EOF
           [target.armv5te-unknown-linux-gnueabi]
           linker = "arm-anykav500-linux-uclibcgnueabi-gcc"
-          rustflags = [ "-C" , "prefer-dynamic"]
+          rustflags = ["-C", "target-feature=+crt-static", "-C", "link-arg=-Wl,--hash-style=sysv", "-C", "debuginfo=2"]
           # rustflags = ["-C --disable-gnu-unique-object link-arg=-Wl,-rpath-link=/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/lib", "-C", "-Wl,--hash-style=sysv", "-C", "-Wl,--dynamic-linker=/lib/ld-uClibc.so.0", "-C", "--disable-gnu-unique-object"]
           # rustflags = ["-C", "-Wl,--dynamic-linker=arm-anykav500-linux-uclibcgnueabi-gcc", "-C", "-Wl,--hash-style=sysv"]
           EOF
