@@ -27,7 +27,7 @@ jobs:
         echo "cver=${cver}" >> $GITHUB_OUTPUT
 
   build:
-    # for armv5te-unknown-linux-gnueabi # anyka ak3918 board
+    # for armv5te-unknown-linux-uclibceabi # anyka ak3918 board
     runs-on: ubuntu-latest
       
     needs: check
@@ -39,6 +39,20 @@ jobs:
         with:
           toolchain: stable
           override: true
+      - name: Set Ak37E CrossCompile for armv5tejl
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install clang llvm libc6-dev-i386 musl-tools libboost-all-dev libc6-dev gcc-multilib libstdc++6 make cmake zlib1g-dev lib32z1-dev liblzo2-dev liblzo2-2 liblzo2-dev:i386 u-boot-tools lib32ncurses6 libncurses5-dev libmpfr-dev libmpfr6 libmpfr6:i386 mtd-utils libtool cpp g++ gawk gcc perl -y
+          mkdir -p /opt/ak37e_cross
+          wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
+          tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2 -C /opt/ak37e_cross
+          export PATH=$PATH:/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin
+          export CC=/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin/arm-anykav500-linux-uclibcgnueabi-gcc
+          source ~/.bashrc
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libmpfr.so.6 /usr/lib/x86_64-linux-gnu/libmpfr.so.4
+          # arm-anykav500-linux-uclibcgnueabi-gcc -v
+          sudo timedatectl set-timezone "Asia/Shanghai"
       - name: Install cross
         run: cargo install cross --git https://github.com/cross-rs/cross
       - uses: actions/checkout@v4
@@ -62,8 +76,10 @@ jobs:
           rustup target add armv5te-unknown-linux-gnueabi
           cat >>~/.cargo/config <<EOF
           [target.armv5te-unknown-linux-gnueabi]
-          linker = "arm-linux-gnueabi-gcc"
-          rustflags = ["-C" , "target-feature=-crt-static", "-C", "link-arg=-Wl,--hash-style=sysv"]
+          linker = "arm-anykav500-linux-uclibcgnueabi-gcc"
+          rustflags = ["-C", "target-feature=+crt-static", "-C", "link-arg=-Wl,--hash-style=sysv", "-C", "debuginfo=2"]
+          # rustflags = ["-C --disable-gnu-unique-object link-arg=-Wl,-rpath-link=/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/lib", "-C", "-Wl,--hash-style=sysv", "-C", "-Wl,--dynamic-linker=/lib/ld-uClibc.so.0", "-C", "--disable-gnu-unique-object"]
+          # rustflags = ["-C", "-Wl,--dynamic-linker=arm-anykav500-linux-uclibcgnueabi-gcc", "-C", "-Wl,--hash-style=sysv"]
           EOF
           git clone https://github.com/vnt-dev/vnt -b ${{ needs.check.outputs.ver }} /opt/vnt
           cd /opt/vnt
