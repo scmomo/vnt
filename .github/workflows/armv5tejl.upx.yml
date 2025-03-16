@@ -48,7 +48,7 @@ jobs:
           wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
           tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2 -C /opt/ak37e_cross
           export PATH=$PATH:/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin
-          # export CC=/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin/arm-anykav500-linux-uclibcgnueabi-gcc
+          export CC=/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin/arm-anykav500-linux-uclibcgnueabi-gcc
           source ~/.bashrc
           sudo ln -s /usr/lib/x86_64-linux-gnu/libmpfr.so.6 /usr/lib/x86_64-linux-gnu/libmpfr.so.4
           # arm-anykav500-linux-uclibcgnueabi-gcc -v
@@ -78,7 +78,7 @@ jobs:
           [target.armv5te-unknown-linux-gnueabi]
           linker = "/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin/arm-anykav500-linux-uclibcgnueabi-gcc"
           #rustflags = ["-C", "--disable-gnu-unique-object",  "-C", "link-arg=-Wl,-rpath-link=/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/lib", "-C", "-Wl,--hash-style=sysv", "-C", "-Wl,--dynamic-linker=/lib/ld-uClibc.so.0", "-C", "--disable-gnu-unique-object"]
-          rustflags = ["-C", "-Wl,--hash-style=sysv","-C", "link-arg=-Wl,--dynamic-linker=/lib/ld-uClibc.so.0"]
+          rustflags = ["link-arg=-Wl,--dynamic-linker=/lib/ld-uClibc.so.0"]
           [unstable]
           build-std = ["core", "std", "alloc", "proc_macro", "panic_abort"]
           build-std-features = ["panic_immediate_abort"]
