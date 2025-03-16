@@ -5,7 +5,6 @@ members = ["vnt", "common", "vnt-cli", "vn-link", "vn-link-cli"]
 opt-level = 'z'
 debug = 0
 debug-assertions = false
-strip = "debuginfo"
 lto = true
 panic = 'abort'
 incremental = false
