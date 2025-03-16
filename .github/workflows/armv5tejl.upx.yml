@@ -48,7 +48,7 @@ jobs:
           wget https://github.com/wireless-tag-com/ak-linux-sdk/raw/refs/heads/main/AnyCloud37E_SDK_V1.08/tools/arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2
           tar -jxvf arm-anykav500-linux-uclibcgnueabi_V1.0.05.tar.bz2 -C /opt/ak37e_cross
           export PATH=$PATH:/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin
-          export CC=/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin/arm-anykav500-linux-uclibcgnueabi-gcc
+          # export CC=/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin/arm-anykav500-linux-uclibcgnueabi-gcc
           source ~/.bashrc
           sudo ln -s /usr/lib/x86_64-linux-gnu/libmpfr.so.6 /usr/lib/x86_64-linux-gnu/libmpfr.so.4
           # arm-anykav500-linux-uclibcgnueabi-gcc -v
@@ -73,7 +73,7 @@ jobs:
           CROSS_CONTAINER_ENGINE: docker
         run: |
           mkdir -p /opt/armv5te/
-          #rustup target add armv5te-unknown-linux-gnueabi
+          rustup target add armv5te-unknown-linux-gnueabi
           cat >>~/.cargo/config <<EOF
           [target.armv5te-unknown-linux-gnueabi]
           linker = "/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin/arm-anykav500-linux-uclibcgnueabi-gcc"
