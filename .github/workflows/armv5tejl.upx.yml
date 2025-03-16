@@ -78,10 +78,6 @@ jobs:
           [target.armv5te-unknown-linux-gnueabi]
           linker = "/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/bin/arm-anykav500-linux-uclibcgnueabi-gcc"
           #rustflags = ["-C", "--disable-gnu-unique-object",  "-C", "link-arg=-Wl,-rpath-link=/opt/ak37e_cross/arm-anykav500-linux-uclibcgnueabi/lib", "-C", "-Wl,--hash-style=sysv", "-C", "-Wl,--dynamic-linker=/lib/ld-uClibc.so.0", "-C", "--disable-gnu-unique-object"]
-          rustflags = ["link-arg=-Wl,--dynamic-linker=/lib/ld-uClibc.so.0"]
-          [unstable]
-          build-std = ["core", "std", "alloc", "proc_macro", "panic_abort"]
-          build-std-features = ["panic_immediate_abort"]
           EOF
           git clone https://github.com/vnt-dev/vnt -b ${{ needs.check.outputs.ver }} /opt/vnt
           cd /opt/vnt
